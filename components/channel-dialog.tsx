@@ -33,7 +33,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { insertChannelSchema } from "@/lib/db/schema/channels"
 import type { ChannelFormData } from "@/lib/db/schema/channels"
 import { useToast } from "@/components/ui/use-toast"
-import { Channel, CHANNEL_LABELS, CHANNEL_TYPES } from "@/lib/channels"
+import { Channel, CHANNEL_LABELS, CHANNEL_TYPES } from "@/lib/channels/metadata"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { createChannel, updateChannel } from "@/lib/services/channels"
@@ -85,7 +85,7 @@ export function ChannelDialog({ mode = "create", channel }: ChannelDialogProps) 
       console.error('Channel dialog error:', error)
       toast({
         variant: "destructive",
-        description: mode === "edit" ? "更新失败，请重试" : "创建失败，请重试" 
+        description: mode === "edit" ? "更新失败，请重试" : "创建失败，请重试"
       })
     } finally {
       setIsPending(false)
@@ -142,7 +142,7 @@ export function ChannelDialog({ mode = "create", channel }: ChannelDialogProps) 
                     类型
                     <span className="text-red-500 ml-1">*</span>
                   </FormLabel>
-                  <Select 
+                  <Select
                     onValueChange={(value) => {
                       field.onChange(value as keyof typeof CHANNEL_TYPES)
                       setSelectedType(value as any)
@@ -167,19 +167,19 @@ export function ChannelDialog({ mode = "create", channel }: ChannelDialogProps) 
                 </FormItem>
               )}
             />
-            
+
             {selectedType && (
-              <ChannelFormFields 
-                type={selectedType} 
-                form={form} 
+              <ChannelFormFields
+                type={selectedType}
+                form={form}
               />
             )}
-            
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)} type="button">
                 取消
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 disabled={isPending}
               >
@@ -192,4 +192,4 @@ export function ChannelDialog({ mode = "create", channel }: ChannelDialogProps) 
       </DialogContent>
     </Dialog>
   )
-} 
+}

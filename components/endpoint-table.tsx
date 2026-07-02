@@ -2,19 +2,19 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Loader2, Eye, Power, Trash, Pencil, Zap, Plus } from "lucide-react"
 import {
@@ -37,7 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants/endpoints"
-import { Channel } from "@/lib/channels"
+import { Channel } from "@/lib/channels/metadata"
 import { EndpointExample } from "@/components/endpoint-example"
 import { useRouter } from "next/navigation"
 import { deleteEndpoint, toggleEndpointStatus, testEndpoint } from "@/lib/services/endpoints"
@@ -51,7 +51,7 @@ interface EndpointTableProps {
   onGroupCreated: () => void
 }
 
-export function EndpointTable({ 
+export function EndpointTable({
   endpoints,
   channels,
   onEndpointsUpdate,
@@ -71,7 +71,7 @@ export function EndpointTable({
 
   const filteredEndpoints = endpoints?.filter((endpoint) => {
     if (!searchQuery.trim()) return true
-    
+
     const channel = channels.find(c => c.id === endpoint.channelId)
     const searchContent = [
       endpoint.id,
@@ -79,14 +79,14 @@ export function EndpointTable({
       endpoint.rule,
       channel?.name,
     ].join(" ").toLowerCase()
-    
+
     const keywords = searchQuery.toLowerCase().split(/\s+/)
     return keywords.every(keyword => searchContent.includes(keyword))
   }) ?? []
 
   const handleDelete = async () => {
     if (!endpointToDelete) return
-    
+
     try {
       setIsDeleting(true)
       await deleteEndpoint(endpointToDelete.id)
@@ -96,9 +96,9 @@ export function EndpointTable({
       setDeleteDialogOpen(false)
     } catch (error) {
       console.error('Error deleting endpoint:', error)
-      toast({ 
+      toast({
         variant: "destructive",
-        description: "删除失败，请重试" 
+        description: "删除失败，请重试"
       })
     } finally {
       setIsDeleting(false)
@@ -109,9 +109,9 @@ export function EndpointTable({
     try {
       setIsLoading(id)
       await toggleEndpointStatus(id)
-      
+
       onEndpointsUpdate()
-      
+
       toast({
         description: "推送接口状态已更新",
       })
@@ -165,9 +165,9 @@ export function EndpointTable({
 
   const handleCreateGroup = () => {
     if (selectedEndpoints.length === 0) {
-      toast({ 
-        variant: "destructive", 
-        description: "请至少选择一个接口" 
+      toast({
+        variant: "destructive",
+        description: "请至少选择一个接口"
       })
       return
     }
@@ -187,17 +187,17 @@ export function EndpointTable({
         </div>
         <div className="flex space-x-2">
           {selectedEndpoints.length > 0 && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="gap-2" 
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
               onClick={handleCreateGroup}
             >
               <Plus className="h-4 w-4" />
               创建接口组 ({selectedEndpoints.length})
             </Button>
           )}
-          <EndpointDialog 
+          <EndpointDialog
             channels={channels}
             onSuccess={onEndpointsUpdate}
           />
@@ -231,7 +231,7 @@ export function EndpointTable({
                 return (
                   <TableRow key={endpoint.id}>
                     <TableCell>
-                      <Checkbox 
+                      <Checkbox
                         checked={selectedEndpoints.some(e => e.id === endpoint.id)}
                         onCheckedChange={() => toggleEndpointSelection(endpoint)}
                       />
@@ -284,7 +284,7 @@ export function EndpointTable({
                             )}
                             测试推送
                           </DropdownMenuItem>
-                          <EndpointDialog 
+                          <EndpointDialog
                             mode="edit"
                             endpoint={endpoint}
                             channels={channels}
@@ -298,7 +298,7 @@ export function EndpointTable({
                             <Power className="h-4 w-4 mr-2" />
                             {endpoint.status === 'active' ? '禁用' : '启用'}
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => {
                               setEndpointToDelete(endpoint)
@@ -346,8 +346,8 @@ export function EndpointTable({
         onOpenChange={(open) => !open && setViewExample(null)}
       />
 
-      <CreateEndpointGroupDialog 
-        open={createGroupDialogOpen} 
+      <CreateEndpointGroupDialog
+        open={createGroupDialogOpen}
         onOpenChange={setCreateGroupDialogOpen}
         selectedEndpoints={selectedEndpoints}
         onSuccess={() => {
@@ -357,4 +357,4 @@ export function EndpointTable({
       />
     </div>
   )
-} 
+}

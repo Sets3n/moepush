@@ -34,8 +34,7 @@ import { insertEndpointSchema } from "@/lib/db/schema/endpoints"
 import { Endpoint, NewEndpoint } from "@/lib/db/schema/endpoints"
 import { useToast } from "@/components/ui/use-toast"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { Channel, ChannelType } from "@/lib/channels"
-import { CHANNEL_TEMPLATES } from "@/lib/channels"
+import { Channel, ChannelType, CHANNEL_TEMPLATES } from "@/lib/channels/metadata"
 import { TemplateFields } from "@/components/template-fields"
 import { createEndpoint, updateEndpoint } from "@/lib/services/endpoints"
 
@@ -62,8 +61,8 @@ const getInitialTemplateType = (endpoint?: Endpoint) => {
   }
 }
 
-export function EndpointDialog({ 
-  mode = "create", 
+export function EndpointDialog({
+  mode = "create",
   endpoint,
   channels,
   icon,
@@ -108,7 +107,7 @@ export function EndpointDialog({
       console.error('Endpoint dialog error:', error)
       toast({
         variant: "destructive",
-        description: mode === "edit" ? "更新失败，请重试" : "创建失败，请重试" 
+        description: mode === "edit" ? "更新失败，请重试" : "创建失败，请重试"
       })
     } finally {
       setIsPending(false)
@@ -168,7 +167,7 @@ export function EndpointDialog({
                         推送渠道
                         <span className="text-red-500 ml-1">*</span>
                       </FormLabel>
-                      <Select 
+                      <Select
                         onValueChange={(value) => {
                           field.onChange(value)
                           const channel = channels.find(c => c.id === value)
@@ -233,11 +232,11 @@ export function EndpointDialog({
                           <TemplateFields form={form} template={template} />
                         ) : (
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="请先选择消息类型"
                               className="font-mono resize-none h-32"
                               disabled
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                         )}
@@ -245,11 +244,11 @@ export function EndpointDialog({
                     )}
                     {!selectedChannelType && (
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="请先选择推送渠道"
                           className="font-mono resize-none h-32"
                           disabled
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                     )}
@@ -261,7 +260,7 @@ export function EndpointDialog({
                 <Button variant="outline" onClick={() => setOpen(false)} type="button">
                   取消
                 </Button>
-                <Button 
+                <Button
                   type="submit"
                   disabled={isPending}
                 >
@@ -275,4 +274,4 @@ export function EndpointDialog({
       </DialogContent>
     </Dialog>
   )
-} 
+}

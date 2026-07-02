@@ -1,6 +1,5 @@
 import { BaseChannel, ChannelConfig, SendMessageOptions } from "./base"
 import { getCachedToken } from "../token-cache"
-import { getRequestContext } from "@cloudflare/next-on-pages"
 
 export class FeishuAppChannel extends BaseChannel {
   readonly config: ChannelConfig = {
@@ -46,6 +45,7 @@ export class FeishuAppChannel extends BaseChannel {
       throw new Error("缺少飞书应用 App ID 或 App Secret")
     }
 
+    const { getRequestContext } = await import("@cloudflare/next-on-pages")
     const kv = getRequestContext().env.TOKEN_CACHE as KVNamespace | undefined
     const cacheKey = `feishu_app:token:${appId}`
 

@@ -8,7 +8,7 @@ import { FeishuAppFields } from "./feishu-app-fields"
 import { DiscordFields } from "./discord-fields"
 import { BarkFields } from "./bark-fields"
 import { WebhookFields } from "./webhook-fields"
-import { CHANNEL_TYPES } from "@/lib/channels"
+import { CHANNEL_TYPES } from "@/lib/channels/metadata"
 import { UseFormReturn } from "react-hook-form"
 import type { ChannelFormData } from "@/lib/db/schema/channels"
 

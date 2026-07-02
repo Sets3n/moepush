@@ -3,7 +3,7 @@ import { getDb } from "@/lib/db"
 import { endpoints } from "@/lib/db/schema/endpoints"
 import { channels } from "@/lib/db/schema/channels"
 import { eq } from "drizzle-orm"
-import { Channel } from "@/lib/channels"
+import { Channel } from "@/lib/channels/metadata"
 import { EndpointsTabs } from "@/components/endpoints-tabs"
 
 export const runtime = "edge"
@@ -43,10 +43,10 @@ export default async function EndpointsPage() {
         </p>
       </div>
 
-      <EndpointsTabs 
+      <EndpointsTabs
         initialEndpoints={endpointList}
-        channels={channelList as Channel[]} 
+        channels={channelList as Channel[]}
       />
     </div>
   )
-} 
+}

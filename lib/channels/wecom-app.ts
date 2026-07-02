@@ -1,6 +1,5 @@
 import { BaseChannel, ChannelConfig, SendMessageOptions } from "./base"
 import { getCachedToken } from "../token-cache"
-import { getRequestContext } from "@cloudflare/next-on-pages"
 
 interface WecomAppMessage {
   msgtype: string
@@ -60,6 +59,7 @@ export class WecomAppChannel extends BaseChannel {
       throw new Error("缺少必要的配置信息")
     }
 
+    const { getRequestContext } = await import("@cloudflare/next-on-pages")
     const kv = getRequestContext().env.TOKEN_CACHE as KVNamespace | undefined
     const cacheKey = `wecom_app:token:${corpId}:${secret}`
 

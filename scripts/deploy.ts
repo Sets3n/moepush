@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -7,6 +7,45 @@ const kvNamespaceName = process.env.KV_NAMESPACE_NAME || 'moepush-token-cache';
 const cloudflareApiToken = process.env.CLOUDFLARE_API_TOKEN;
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
 const projectName = process.env.PROJECT_NAME || 'moepush';
+
+const run = (command: string, args: string[]) => {
+    execFileSync(command, args, { stdio: 'inherit' });
+};
+
+const read = (command: string, args: string[]) => {
+    return execFileSync(command, args, { encoding: 'utf-8' });
+};
+
+const requireCloudflareEnv = () => {
+    const missing = [
+        ['CLOUDFLARE_API_TOKEN', cloudflareApiToken],
+        ['CLOUDFLARE_ACCOUNT_ID', accountId],
+    ].filter(([, value]) => !value);
+
+    if (missing.length > 0) {
+        throw new Error(`Missing required environment variables: ${missing.map(([name]) => name).join(', ')}`);
+    }
+};
+
+const cloudflareRequest = async <T>(pathName: string, init: RequestInit = {}) => {
+    const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}${pathName}`, {
+        ...init,
+        headers: {
+            Authorization: `Bearer ${cloudflareApiToken}`,
+            'Content-Type': 'application/json',
+            ...init.headers,
+        },
+    });
+
+    const text = await response.text();
+    const data = text ? JSON.parse(text) as T & { success?: boolean, errors?: unknown[] } : {} as T & { success?: boolean, errors?: unknown[] };
+
+    if (!response.ok || data.success === false) {
+        throw new Error(`Cloudflare API ${init.method || 'GET'} ${pathName} failed (${response.status} ${response.statusText}): ${text}`);
+    }
+
+    return data;
+};
 
 const setupWranglerConfig = () => {
     const wranglerExamplePath = path.resolve('wrangler.example.json');
@@ -19,25 +58,25 @@ const setupWranglerConfig = () => {
     fs.writeFileSync(wranglerConfigPath, JSON.stringify(json, null, 2));
 };
 
-const checkAndCreateKvNamespace = () => {
-    let nsId: string | undefined;
+const checkAndCreateKvNamespace = async () => {
+    type KvNamespace = { id: string, title: string };
+    type KvListResponse = { result: KvNamespace[] };
+    type KvCreateResponse = { result: KvNamespace };
 
-    const getNamespaceId = () => {
-        const nsList = execSync('wrangler kv namespace list --json').toString();
-        const namespaces = JSON.parse(nsList);
-        return namespaces.find((ns: any) => ns.title === kvNamespaceName)?.id;
+    const getNamespaceId = async () => {
+        const data = await cloudflareRequest<KvListResponse>('/storage/kv/namespaces');
+        return data.result.find((ns) => ns.title === kvNamespaceName)?.id;
     };
 
-    try {
-        nsId = getNamespaceId();
-    } catch (error) {
-        console.error('Error listing KV namespaces:', error);
-    }
+    let nsId = await getNamespaceId();
 
     if (!nsId) {
         console.log(`Creating KV namespace: ${kvNamespaceName}`);
-        execSync(`wrangler kv namespace create "${kvNamespaceName}"`);
-        nsId = getNamespaceId();
+        const data = await cloudflareRequest<KvCreateResponse>('/storage/kv/namespaces', {
+            method: 'POST',
+            body: JSON.stringify({ title: kvNamespaceName }),
+        });
+        nsId = data.result.id || await getNamespaceId();
         if (!nsId) {
             throw new Error('Failed to create KV namespace');
         }
@@ -55,7 +94,7 @@ const checkAndCreateDatabase = () => {
     let dbId;
 
     const getDatabaseId = () => {
-        const dbList = execSync('wrangler d1 list --json').toString();
+        const dbList = read('wrangler', ['d1', 'list', '--json']);
         const databases = JSON.parse(dbList);
         return databases.find((db: any) => db.name === dbName)?.uuid;
     }
@@ -68,7 +107,7 @@ const checkAndCreateDatabase = () => {
 
     if (!dbId) {
         console.log(`Creating new D1 database: ${dbName}`);
-        execSync(`wrangler d1 create "${dbName}"`);
+        run('wrangler', ['d1', 'create', dbName]);
         dbId = getDatabaseId();
         if (!dbId) {
             throw new Error('Failed to create database');
@@ -84,7 +123,7 @@ const checkAndCreateDatabase = () => {
 };
 
 const applyMigrations = () => {
-    execSync(`wrangler d1 migrations apply "${dbName}" --remote`);
+    run('wrangler', ['d1', 'migrations', 'apply', dbName, '--remote']);
 };
 
 const createPagesSecret = () => {
@@ -96,12 +135,13 @@ const createPagesSecret = () => {
         `DISABLE_REGISTER=${process.env.DISABLE_REGISTER}`,
     ];
     fs.writeFileSync(envFilePath, envVariables.join('\n'));
-    execSync(`wrangler pages secret bulk .env`);
+    run('wrangler', ['pages', 'secret', 'bulk', '.env', '--project-name', projectName]);
 };
 
 const deployPages = () => {
     console.log('Deploying to Cloudflare Pages...');
-    execSync('pnpm run deploy');
+    run('pnpm', ['run', 'pages:build']);
+    run('wrangler', ['pages', 'deploy', '--project-name', projectName, '--branch', 'main']);
     console.log('Deployment completed successfully');
 };
 
@@ -115,12 +155,20 @@ const checkProjectExists = async () => {
             },
         });
 
-        if (!response.ok && response.status === 404) {
+        if (response.status === 404) {
             console.log(`Project ${projectName} does not exist. Creating...`);
             await createProject();
-        } else {
-            console.log(`Project ${projectName} already exists.`);
+            return;
         }
+
+        const text = await response.text();
+        const data = text ? JSON.parse(text) as { success?: boolean } : {};
+
+        if (!response.ok || data.success === false) {
+            throw new Error(`Cloudflare API GET /pages/projects/${projectName} failed (${response.status} ${response.statusText}): ${text}`);
+        }
+
+        console.log(`Project ${projectName} already exists.`);
     } catch (error) {
         console.error('Error checking project existence:', error);
         throw error;
@@ -141,14 +189,11 @@ const createProject = async () => {
             }),
         });
 
-        if (!response.ok) {
-            throw new Error(`Error creating project: ${response.statusText}`);
-        }
-
-        const data = await response.json() as { success: boolean, result: { name: string } };
+        const text = await response.text();
+        const data = text ? JSON.parse(text) as { success: boolean, result: { name: string } } : { success: false, result: { name: '' } };
         
-        if (!data.success) {
-            throw new Error('Failed to create project');
+        if (!response.ok || !data.success) {
+            throw new Error(`Error creating project (${response.status} ${response.statusText}): ${text}`);
         }
 
         // 等待项目创建完成
@@ -165,13 +210,10 @@ const createProject = async () => {
             }
         );
 
-        if (!verifyResponse.ok) {
-            throw new Error('Project creation verification failed');
-        }
-
-        const verifyData = await verifyResponse.json() as { success: boolean };
-        if (!verifyData.success) {
-            throw new Error('Project creation could not be verified');
+        const verifyText = await verifyResponse.text();
+        const verifyData = verifyText ? JSON.parse(verifyText) as { success: boolean } : { success: false };
+        if (!verifyResponse.ok || !verifyData.success) {
+            throw new Error(`Project creation verification failed (${verifyResponse.status} ${verifyResponse.statusText}): ${verifyText}`);
         }
 
         console.log(`Project ${projectName} created and verified successfully`);
@@ -183,10 +225,11 @@ const createProject = async () => {
 
 const main = async () => {
     try {
+        requireCloudflareEnv();
         setupWranglerConfig();
         await checkProjectExists();
         checkAndCreateDatabase();
-        checkAndCreateKvNamespace();
+        await checkAndCreateKvNamespace();
         applyMigrations();
         createPagesSecret();
         deployPages();

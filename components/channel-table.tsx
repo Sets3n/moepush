@@ -2,24 +2,24 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { ChannelDialog } from "@/components/channel-dialog"
-import { Channel, CHANNEL_LABELS } from "@/lib/channels"
+import { Channel, CHANNEL_LABELS } from "@/lib/channels/metadata"
 import { useToast } from "@/components/ui/use-toast"
 import {
   AlertDialog,
@@ -53,20 +53,20 @@ export function ChannelTable({ channels }: ChannelTableProps) {
 
   const filteredChannels = channelsState.filter((channel) => {
     if (!searchQuery.trim()) return true
-    
+
     const searchContent = [
       channel.id,
       channel.name,
       CHANNEL_LABELS[channel.type]
     ].join(" ").toLowerCase()
-    
+
     const keywords = searchQuery.toLowerCase().split(/\s+/)
     return keywords.every(keyword => searchContent.includes(keyword))
   })
 
   const handleDelete = async () => {
     if (!channelToDelete) return
-    
+
     try {
       setIsDeleting(true)
       await deleteChannel(channelToDelete.id)
@@ -76,7 +76,7 @@ export function ChannelTable({ channels }: ChannelTableProps) {
       setDeleteDialogOpen(false)
     } catch (error) {
       console.error('Error deleting channel:', error)
-      toast({ 
+      toast({
         title: '删除失败',
         variant: 'destructive'
       })
@@ -86,7 +86,7 @@ export function ChannelTable({ channels }: ChannelTableProps) {
   }
 
   const getStatusBadgeClass = (status: Channel["status"]) => {
-    return status === "active" 
+    return status === "active"
       ? "inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
       : "inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20"
   }
@@ -152,11 +152,11 @@ export function ChannelTable({ channels }: ChannelTableProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <ChannelDialog 
+                        <ChannelDialog
                           mode="edit"
                           channel={channel}
                         />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => {
                             setChannelToDelete(channel)
@@ -197,4 +197,4 @@ export function ChannelTable({ channels }: ChannelTableProps) {
       </AlertDialog>
     </div>
   )
-} 
+}

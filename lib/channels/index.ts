@@ -1,5 +1,4 @@
 import { BaseChannel } from "./base"
-import { Channel as DBInferChannel } from "@/lib/db/schema/channels"
 import { DingTalkChannel } from "./dingtalk"
 import { DingTalkAppChannel } from "./dingtalk-app"
 import { WecomChannel } from "./wecom"
@@ -10,22 +9,9 @@ import { FeishuAppChannel } from "./feishu-app"
 import { DiscordChannel } from "./discord"
 import { BarkChannel } from "./bark"
 import { WebhookChannel } from "./webhook"
-
-// 渠道类型常量
-export const CHANNEL_TYPES = {
-  DINGTALK: "dingtalk",
-  DINGTALK_APP: "dingtalk_app",
-  WECOM: "wecom",
-  WECOM_APP: "wecom_app",
-  TELEGRAM: "telegram",
-  FEISHU: "feishu",
-  FEISHU_APP: "feishu_app",
-  DISCORD: "discord",
-  BARK: "bark",
-  WEBHOOK: "webhook",
-} as const
-
-export type ChannelType = typeof CHANNEL_TYPES[keyof typeof CHANNEL_TYPES]
+export { CHANNEL_LABELS, CHANNEL_TEMPLATES, CHANNEL_TYPES } from "./metadata"
+export type { Channel, ChannelType } from "./metadata"
+import { CHANNEL_TYPES, ChannelType } from "./metadata"
 
 // 注册所有渠道
 const channels: Record<ChannelType, BaseChannel> = {
@@ -41,24 +27,6 @@ const channels: Record<ChannelType, BaseChannel> = {
   [CHANNEL_TYPES.WEBHOOK]: new WebhookChannel(),
 }
 
-// 获取所有渠道标签
-export const CHANNEL_LABELS: Record<ChannelType, string> = Object.entries(channels).reduce(
-  (acc, [type, channel]) => ({
-    ...acc,
-    [type]: channel.getLabel(),
-  }),
-  {} as Record<ChannelType, string>
-)
-
-// 获取所有渠道模板
-export const CHANNEL_TEMPLATES = Object.entries(channels).reduce(
-  (acc, [type, channel]) => ({
-    ...acc,
-    [type]: channel.getTemplates(),
-  }),
-  {} as Record<ChannelType, any[]>
-)
-
 // 获取指定渠道
 export function getChannel(type: ChannelType): BaseChannel {
   return channels[type]
@@ -66,13 +34,10 @@ export function getChannel(type: ChannelType): BaseChannel {
 
 // 发送消息
 export async function sendChannelMessage(
-  type: ChannelType, 
-  message: any, 
+  type: ChannelType,
+  message: any,
   options: any
 ): Promise<Response> {
   const channel = getChannel(type)
   return channel.sendMessage(message, options)
 }
-
-// 导出渠道接口
-export type Channel = DBInferChannel & { type: ChannelType }

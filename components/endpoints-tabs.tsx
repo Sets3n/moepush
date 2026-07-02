@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Channel } from "@/lib/channels"
+import { Channel } from "@/lib/channels/metadata"
 import { Endpoint } from "@/lib/db/schema/endpoints"
 import { EndpointGroupWithEndpoints } from "@/types/endpoint-group"
 import { getEndpointGroups } from "@/lib/services/endpoint-groups"
@@ -84,7 +84,7 @@ export function EndpointsTabs({ initialEndpoints, channels }: { initialEndpoints
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
               </div>
             ) : (
-              <EndpointTable 
+              <EndpointTable
                 endpoints={endpoints}
                 onEndpointsUpdate={loadEndpoints}
                 channels={channels}
@@ -108,7 +108,7 @@ export function EndpointsTabs({ initialEndpoints, channels }: { initialEndpoints
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
               </div>
             ) : (
-              <EndpointGroupTable 
+              <EndpointGroupTable
                 groups={groups}
                 onGroupsUpdate={loadGroups}
               />
@@ -118,4 +118,4 @@ export function EndpointsTabs({ initialEndpoints, channels }: { initialEndpoints
       </TabsContent>
     </Tabs>
   )
-} 
+}

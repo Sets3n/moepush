@@ -1,6 +1,5 @@
 import { BaseChannel, ChannelConfig, SendMessageOptions } from "./base"
 import { getCachedToken } from "../token-cache"
-import { getRequestContext } from "@cloudflare/next-on-pages"
 
 export class DingTalkAppChannel extends BaseChannel {
   readonly config: ChannelConfig = {
@@ -41,6 +40,7 @@ export class DingTalkAppChannel extends BaseChannel {
       throw new Error("缺少钉钉应用 AppKey、AppSecret 或 AgentId")
     }
 
+    const { getRequestContext } = await import("@cloudflare/next-on-pages")
     const kv = getRequestContext().env.TOKEN_CACHE as KVNamespace | undefined
     const cacheKey = `dingtalk_app:token:${appKey}`
 

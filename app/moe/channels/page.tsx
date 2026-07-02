@@ -4,7 +4,7 @@ import { ChannelTable } from "@/components/channel-table"
 import { getDb } from "@/lib/db"
 import { channels } from "@/lib/db/schema/channels"
 import { eq } from "drizzle-orm"
-import type { Channel } from "@/lib/channels"
+import type { Channel } from "@/lib/channels/metadata"
 
 export const runtime = "edge"
 
@@ -40,11 +40,11 @@ export default async function ChannelsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ChannelTable 
-            channels={channelList as Channel[]} 
+          <ChannelTable
+            channels={channelList as Channel[]}
           />
         </CardContent>
       </Card>
     </div>
   )
-} 
+}
