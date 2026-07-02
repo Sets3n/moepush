@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const dbName = process.env.D1_DATABASE_NAME || 'moepush-db';
+const kvNamespaceName = process.env.KV_NAMESPACE_NAME || 'moepush-token-cache';
 const cloudflareApiToken = process.env.CLOUDFLARE_API_TOKEN;
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
 const projectName = process.env.PROJECT_NAME || 'moepush';
@@ -16,6 +17,38 @@ const setupWranglerConfig = () => {
     json.d1_databases[0].database_name = dbName;
     json.name = projectName;
     fs.writeFileSync(wranglerConfigPath, JSON.stringify(json, null, 2));
+};
+
+const checkAndCreateKvNamespace = () => {
+    let nsId: string | undefined;
+
+    const getNamespaceId = () => {
+        const nsList = execSync('wrangler kv namespace list --json').toString();
+        const namespaces = JSON.parse(nsList);
+        return namespaces.find((ns: any) => ns.title === kvNamespaceName)?.id;
+    };
+
+    try {
+        nsId = getNamespaceId();
+    } catch (error) {
+        console.error('Error listing KV namespaces:', error);
+    }
+
+    if (!nsId) {
+        console.log(`Creating KV namespace: ${kvNamespaceName}`);
+        execSync(`wrangler kv namespace create "${kvNamespaceName}"`);
+        nsId = getNamespaceId();
+        if (!nsId) {
+            throw new Error('Failed to create KV namespace');
+        }
+    } else {
+        console.log(`KV namespace ${kvNamespaceName} already exists`);
+    }
+
+    const wranglerConfigPath = path.resolve('wrangler.json');
+    const wranglerConfig = JSON.parse(fs.readFileSync(wranglerConfigPath, 'utf-8'));
+    wranglerConfig.kv_namespaces[0].id = nsId;
+    fs.writeFileSync(wranglerConfigPath, JSON.stringify(wranglerConfig, null, 2));
 };
 
 const checkAndCreateDatabase = () => {
@@ -153,6 +186,7 @@ const main = async () => {
         setupWranglerConfig();
         await checkProjectExists();
         checkAndCreateDatabase();
+        checkAndCreateKvNamespace();
         applyMigrations();
         createPagesSecret();
         deployPages();
