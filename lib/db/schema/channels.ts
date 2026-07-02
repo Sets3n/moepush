@@ -14,6 +14,8 @@ export const channels = sqliteTable("channels", {
   agentId: text("agent_id"),
   botToken: text("bot_token"),
   chatId: text("chat_id"),
+  appId: text("app_id"),
+  appKey: text("app_key"),
   status: text("status", { enum: ["active", "inactive"] }).notNull().default("active"),
   userId: text("user_id").notNull(),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -32,6 +34,8 @@ export const insertChannelSchema = createInsertSchema(channels).extend({
   id: z.string().optional(),
   botToken: z.string().optional(),
   chatId: z.string().optional(),
+  appId: z.string().optional(),
+  appKey: z.string().optional(),
 }).refine((data) => {
   if (data.type === CHANNEL_TYPES.WECOM_APP) {
     return !!data.corpId
@@ -57,7 +61,7 @@ export const insertChannelSchema = createInsertSchema(channels).extend({
   message: "企业微信应用必须提供应用Secret",
   path: ["secret"],
 }).refine((data) => {
-  if (![CHANNEL_TYPES.WECOM_APP, CHANNEL_TYPES.TELEGRAM, CHANNEL_TYPES.FEISHU, CHANNEL_TYPES.BARK, CHANNEL_TYPES.WEBHOOK].includes(data.type as any)) {
+  if (![CHANNEL_TYPES.WECOM_APP, CHANNEL_TYPES.DINGTALK_APP, CHANNEL_TYPES.TELEGRAM, CHANNEL_TYPES.FEISHU, CHANNEL_TYPES.FEISHU_APP, CHANNEL_TYPES.BARK, CHANNEL_TYPES.WEBHOOK].includes(data.type as any)) {
     if (!data.webhook) return false
     try {
       new URL(data.webhook)
@@ -128,6 +132,46 @@ export const insertChannelSchema = createInsertSchema(channels).extend({
 }, {
   message: "Telegram 机器人必须提供 Chat ID",
   path: ["chatId"],
+}).refine((data) => {
+  if (data.type === CHANNEL_TYPES.FEISHU_APP) {
+    return !!data.appId
+  }
+  return true
+}, {
+  message: "飞书应用必须提供 App ID",
+  path: ["appId"],
+}).refine((data) => {
+  if (data.type === CHANNEL_TYPES.FEISHU_APP) {
+    return !!data.secret
+  }
+  return true
+}, {
+  message: "飞书应用必须提供 App Secret",
+  path: ["secret"],
+}).refine((data) => {
+  if (data.type === CHANNEL_TYPES.DINGTALK_APP) {
+    return !!data.appKey
+  }
+  return true
+}, {
+  message: "钉钉应用必须提供 AppKey",
+  path: ["appKey"],
+}).refine((data) => {
+  if (data.type === CHANNEL_TYPES.DINGTALK_APP) {
+    return !!data.secret
+  }
+  return true
+}, {
+  message: "钉钉应用必须提供 AppSecret",
+  path: ["secret"],
+}).refine((data) => {
+  if (data.type === CHANNEL_TYPES.DINGTALK_APP) {
+    return !!data.agentId
+  }
+  return true
+}, {
+  message: "钉钉应用必须提供 AgentId",
+  path: ["agentId"],
 })
 
 export const selectChannelSchema = createSelectSchema(channels)

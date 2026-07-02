@@ -1,10 +1,12 @@
 import { BaseChannel } from "./base"
 import { Channel as DBInferChannel } from "@/lib/db/schema/channels"
 import { DingTalkChannel } from "./dingtalk"
+import { DingTalkAppChannel } from "./dingtalk-app"
 import { WecomChannel } from "./wecom"
 import { WecomAppChannel } from "./wecom-app"
 import { TelegramChannel } from "./telegram"
 import { FeishuChannel } from "./feishu"
+import { FeishuAppChannel } from "./feishu-app"
 import { DiscordChannel } from "./discord"
 import { BarkChannel } from "./bark"
 import { WebhookChannel } from "./webhook"
@@ -12,10 +14,12 @@ import { WebhookChannel } from "./webhook"
 // 渠道类型常量
 export const CHANNEL_TYPES = {
   DINGTALK: "dingtalk",
+  DINGTALK_APP: "dingtalk_app",
   WECOM: "wecom",
   WECOM_APP: "wecom_app",
   TELEGRAM: "telegram",
   FEISHU: "feishu",
+  FEISHU_APP: "feishu_app",
   DISCORD: "discord",
   BARK: "bark",
   WEBHOOK: "webhook",
@@ -26,10 +30,12 @@ export type ChannelType = typeof CHANNEL_TYPES[keyof typeof CHANNEL_TYPES]
 // 注册所有渠道
 const channels: Record<ChannelType, BaseChannel> = {
   [CHANNEL_TYPES.DINGTALK]: new DingTalkChannel(),
+  [CHANNEL_TYPES.DINGTALK_APP]: new DingTalkAppChannel(),
   [CHANNEL_TYPES.WECOM]: new WecomChannel(),
   [CHANNEL_TYPES.WECOM_APP]: new WecomAppChannel(),
   [CHANNEL_TYPES.TELEGRAM]: new TelegramChannel(),
   [CHANNEL_TYPES.FEISHU]: new FeishuChannel(),
+  [CHANNEL_TYPES.FEISHU_APP]: new FeishuAppChannel(),
   [CHANNEL_TYPES.DISCORD]: new DiscordChannel(),
   [CHANNEL_TYPES.BARK]: new BarkChannel(),
   [CHANNEL_TYPES.WEBHOOK]: new WebhookChannel(),

@@ -1,4 +1,6 @@
 import { BaseChannel, ChannelConfig, SendMessageOptions } from "./base"
+import { getCachedToken } from "../token-cache"
+import { getRequestContext } from "@cloudflare/next-on-pages"
 
 interface WecomAppMessage {
   msgtype: string
@@ -53,24 +55,27 @@ export class WecomAppChannel extends BaseChannel {
     options: SendMessageOptions
   ): Promise<Response> {
     const { corpId, agentId, secret } = options
-    
+
     if (!corpId || !agentId || !secret) {
       throw new Error("缺少必要的配置信息")
     }
-    
-    console.log('sendWecomAppMessage message:', message)
 
-    const tokenResponse = await fetch(
-      `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${secret}`
-    )
-    const tokenData = await tokenResponse.json() as { access_token: string, errcode: number, errmsg: string }
-    
-    if (!tokenResponse.ok || !tokenData.access_token) {
-      throw new Error(`获取访问令牌失败: ${tokenData.errmsg}`)
-    }
+    const kv = getRequestContext().env.TOKEN_CACHE as KVNamespace | undefined
+    const cacheKey = `wecom_app:token:${corpId}:${secret}`
+
+    const accessToken = await getCachedToken(kv, cacheKey, async () => {
+      const res = await fetch(
+        `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${secret}`
+      )
+      const data = await res.json() as { access_token: string, errcode: number, errmsg: string }
+      if (!res.ok || !data.access_token) {
+        throw new Error(`获取访问令牌失败: ${data.errmsg}`)
+      }
+      return data.access_token
+    })
 
     const response = await fetch(
-      `https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=${tokenData.access_token}`,
+      `https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=${accessToken}`,
       {
         method: 'POST',
         headers: {
@@ -86,9 +91,12 @@ export class WecomAppChannel extends BaseChannel {
 
     const data = await response.json() as { errcode: number, errmsg: string }
     if (data.errcode !== 0) {
+      if (data.errcode === 40014 || data.errcode === 42001) {
+        await kv?.delete(cacheKey)
+      }
       throw new Error(`企业微信应用消息推送失败: ${data.errmsg}`)
     }
 
     return response
   }
-} 
+}

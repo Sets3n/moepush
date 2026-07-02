@@ -16,5 +16,11 @@
       "database_id": "${D1_DATABASE_ID}",
       "migrations_dir": "./drizzle"
     }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "TOKEN_CACHE",
+      "id": "${KV_NAMESPACE_ID}"
+    }
   ]
 }

@@ -1,8 +1,10 @@
 import { DingtalkFields } from "./dingtalk-fields"
+import { DingTalkAppFields } from "./dingtalk-app-fields"
 import { WecomAppFields } from "./wecom-app-fields"
 import { TelegramFields } from "./telegram-fields"
 import { WecomFields } from "./wecom-fields"
 import { FeishuFields } from "./feishu-fields"
+import { FeishuAppFields } from "./feishu-app-fields"
 import { DiscordFields } from "./discord-fields"
 import { BarkFields } from "./bark-fields"
 import { WebhookFields } from "./webhook-fields"
@@ -21,6 +23,9 @@ export function ChannelFormFields({ type, form }: ChannelFormFieldsProps) {
         case CHANNEL_TYPES.DINGTALK:
             return <DingtalkFields form={form} />
 
+        case CHANNEL_TYPES.DINGTALK_APP:
+            return <DingTalkAppFields form={form} />
+
         case CHANNEL_TYPES.WECOM:
             return <WecomFields form={form} />
 
@@ -32,6 +37,9 @@ export function ChannelFormFields({ type, form }: ChannelFormFieldsProps) {
             
         case CHANNEL_TYPES.FEISHU:
             return <FeishuFields form={form} />
+
+        case CHANNEL_TYPES.FEISHU_APP:
+            return <FeishuAppFields form={form} />
             
         case CHANNEL_TYPES.DISCORD:
             return <DiscordFields form={form} />

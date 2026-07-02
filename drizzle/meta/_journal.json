@@ -78,6 +78,13 @@
       "when": 1742735902244,
       "tag": "0010_skinny_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1751570000000,
+      "tag": "0011_known_trask",
+      "breakpoints": true
     }
   ]
 }

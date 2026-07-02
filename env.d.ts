@@ -3,6 +3,7 @@
 declare global {
   interface CloudflareEnv {
     DB: D1Database;
+    TOKEN_CACHE: KVNamespace;
     AUTH_SECRET: string;
     AUTH_GITHUB_ID: string;
     AUTH_GITHUB_SECRET: string;

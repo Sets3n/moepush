@@ -62,6 +62,8 @@ export function ChannelDialog({ mode = "create", channel }: ChannelDialogProps) 
       agentId: channel?.agentId || "",
       botToken: channel?.botToken || "",
       chatId: channel?.chatId || "",
+      appId: channel?.appId || "",
+      appKey: channel?.appKey || "",
     },
   })
 

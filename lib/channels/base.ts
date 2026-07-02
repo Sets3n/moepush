@@ -28,6 +28,8 @@ export interface SendMessageOptions {
   agentId?: string
   botToken?: string
   chatId?: string
+  appId?: string
+  appKey?: string
   [key: string]: any
 }
 
