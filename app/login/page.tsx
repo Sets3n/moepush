@@ -41,17 +41,8 @@ export default function LoginPage() {
           <Suspense>
             <LoginForm />
           </Suspense>
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            还没有账号?{" "}
-            <Link
-              href="/register"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              注册
-            </Link>
-          </p>
         </div>
       </div>
     </div>
   );
-} 
+}

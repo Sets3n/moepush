@@ -42,7 +42,7 @@ export function SiteHeader({ user, variant = "home", nav }: SiteHeaderProps) {
               GitHub
             </Link>
           )}
-          
+
           {user ? (
             <UserNav user={user} />
           ) : (
@@ -51,9 +51,6 @@ export function SiteHeader({ user, variant = "home", nav }: SiteHeaderProps) {
                 <Link href="/login">
                   <Button variant="ghost">登录</Button>
                 </Link>
-                <Link href="/register">
-                  <Button>注册</Button>
-                </Link>
               </div>
             )
           )}
@@ -61,4 +58,4 @@ export function SiteHeader({ user, variant = "home", nav }: SiteHeaderProps) {
       </div>
     </header>
   );
-} 
+}
