@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { parseAliyunCallbackForm } from "@/lib/aliyun-callback"
+import { formatAliyunCallbackMessage, parseAliyunCallbackForm } from "@/lib/aliyun-callback"
 import { pushEndpointMessage, PushEndpointError } from "@/lib/push"
 
 export const runtime = "edge"
@@ -19,7 +19,13 @@ export async function POST(
 
     const form = await request.formData()
     const body = await parseAliyunCallbackForm(form, { uid, seed })
-    await pushEndpointMessage(id, body)
+    const message = formatAliyunCallbackMessage(body)
+    await pushEndpointMessage(id, {
+      body: message,
+      content: message,
+      text: message,
+      aliyun: body,
+    })
 
     return Response.json({ message: "推送成功" }, { status: 200 })
   } catch (error) {
