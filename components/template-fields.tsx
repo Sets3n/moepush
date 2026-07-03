@@ -20,8 +20,12 @@ import {
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { UseFormReturn } from "react-hook-form"
 import { MessageTemplate, TemplateField } from "@/lib/channels/base"
-import { getNestedValue, setNestedValue } from "@/lib/utils"
+import { setNestedValue } from "@/lib/utils"
 import { FunctionSelector } from "@/components/function-selector"
+import {
+  getInitialTemplateFieldValues,
+  getSwitchedTemplateFieldValues,
+} from "@/lib/template-field-values"
 
 interface TemplateFieldsProps {
   form: UseFormReturn<any>
@@ -94,23 +98,7 @@ export function TemplateFields({ form, template }: TemplateFieldsProps) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [prevType, setPrevType] = useState(template.type)
   const [fieldValues, setFieldValues] = useState<Record<string, any>>(() => {
-    try {
-      const rule = JSON.parse(form.getValues("rule") || "{}")
-      const flattenedValues: Record<string, any> = {}
-      template.fields.forEach(field => {
-        if (field.component === 'hidden' && field.defaultValue !== undefined) {
-          flattenedValues[field.key] = field.defaultValue
-        } else {
-          const value = getNestedValue(rule, field.key)
-          if (value !== undefined) {
-            flattenedValues[field.key] = value
-          }
-        }
-      })
-      return flattenedValues
-    } catch {
-      return {}
-    }
+    return getInitialTemplateFieldValues(form.getValues("rule") || "{}", template.fields)
   })
 
   const requiredFields = template.fields.filter(field => field.required)
@@ -118,13 +106,7 @@ export function TemplateFields({ form, template }: TemplateFieldsProps) {
 
   useEffect(() => {
     if (prevType !== template.type) {
-      const newFieldValues: Record<string, any> = {}
-      template.fields.forEach(field => {
-        if (fieldValues[field.key] !== undefined) {
-          newFieldValues[field.key] = fieldValues[field.key]
-        }
-      })
-      setFieldValues(newFieldValues)
+      setFieldValues(getSwitchedTemplateFieldValues(fieldValues, template.fields))
       setPrevType(template.type)
     }
   }, [template.type, prevType, fieldValues, template.fields])
@@ -240,4 +222,4 @@ export function TemplateFields({ form, template }: TemplateFieldsProps) {
       )}
     </div>
   )
-} 
+}
