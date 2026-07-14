@@ -86,6 +86,17 @@ function unique(values: Array<string | undefined>) {
   return Array.from(new Set(values.filter((value): value is string => Boolean(value))))
 }
 
+export function shouldNotifyAliyunCallback(content: unknown) {
+  const callback = content as AliyunCallbackContent
+  const hasOssResults = Boolean(callback.Data?.Results?.length)
+
+  if (callback.Code !== undefined && callback.Code !== 200 && !hasOssResults) {
+    return false
+  }
+
+  return true
+}
+
 export function formatAliyunCallbackMessage(content: unknown) {
   const callback = content as AliyunCallbackContent
   const lines = ["阿里云内容安全通知"]

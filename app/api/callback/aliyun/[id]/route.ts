@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server"
-import { formatAliyunCallbackMessage, parseAliyunCallbackForm } from "@/lib/aliyun-callback"
+import {
+  formatAliyunCallbackMessage,
+  parseAliyunCallbackForm,
+  shouldNotifyAliyunCallback,
+} from "@/lib/aliyun-callback"
 import { pushEndpointMessage, PushEndpointError } from "@/lib/push"
 
 export const runtime = "edge"
@@ -19,6 +23,11 @@ export async function POST(
 
     const form = await request.formData()
     const body = await parseAliyunCallbackForm(form, { uid, seed })
+
+    if (!shouldNotifyAliyunCallback(body)) {
+      return Response.json({ message: "已忽略无检测结果的阿里云回调" }, { status: 200 })
+    }
+
     const message = formatAliyunCallbackMessage(body)
     await pushEndpointMessage(id, {
       body: message,
