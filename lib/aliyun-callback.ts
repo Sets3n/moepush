@@ -27,6 +27,24 @@ type AliyunCallbackContent = {
   scanResult?: AliyunScanResult
   auditResult?: AliyunAuditResult
   humanAuditResult?: AliyunAuditResult
+  Code?: number
+  RequestId?: string
+  Data?: {
+    Results?: Array<{
+      Service?: string
+      RiskLevel?: string
+      Result?: Array<{
+        Description?: string
+        Confidence?: number
+        Label?: string
+        RiskLevel?: string
+      }>
+    }>
+    OssObjectName?: string
+    OssBucketName?: string
+    OssRegionId?: string
+    RiskLevel?: string
+  }
 }
 
 async function sha256Hex(value: string) {
@@ -71,6 +89,40 @@ function unique(values: Array<string | undefined>) {
 export function formatAliyunCallbackMessage(content: unknown) {
   const callback = content as AliyunCallbackContent
   const lines = ["阿里云内容安全通知"]
+
+  if (callback.Data?.Results?.length) {
+    const data = callback.Data
+    const results = callback.Data.Results ?? []
+    const resultItems = results.flatMap((result) =>
+      (result.Result ?? []).map((item) => ({
+        ...item,
+        Service: result.Service,
+        ParentRiskLevel: result.RiskLevel,
+      }))
+    )
+
+    lines.push("")
+    if (data.OssBucketName) lines.push(`存储桶：${data.OssBucketName}`)
+    if (data.OssObjectName) lines.push(`文件路径：${data.OssObjectName}`)
+    if (data.OssRegionId) lines.push(`区域：${data.OssRegionId}`)
+    if (data.RiskLevel) lines.push(`风险等级：${data.RiskLevel}`)
+
+    resultItems.forEach((item, index) => {
+      if (resultItems.length > 1) {
+        lines.push("")
+        lines.push(`违规项 ${index + 1}`)
+      }
+      if (item.Description) lines.push(`违规说明：${item.Description}`)
+      if (item.Confidence !== undefined) lines.push(`置信度：${item.Confidence}%`)
+      if (item.Label) lines.push(`标签：${item.Label}`)
+      if (item.RiskLevel || item.ParentRiskLevel) {
+        lines.push(`风险等级：${item.RiskLevel || item.ParentRiskLevel}`)
+      }
+      if (item.Service) lines.push(`服务：${item.Service}`)
+    })
+
+    if (callback.RequestId) lines.push(`请求ID：${callback.RequestId}`)
+  }
 
   if (callback.scanResult) {
     const scan = callback.scanResult
